@@ -1,57 +1,95 @@
 import win.clip
 import gdip
 import win
+import console
+import win.timer
+import process
+import process.mutex
 
+targetName = "雪星实验室"
 
-//与明年高考的时间差
-var t = time((time.now().year+1)++"-6-7 0:0:0").diffsecond(time.now())
-//格式化
-var ts = string.format("%0.2f", t/60/60/24)
-var tsday, tsperc = table.unpack(string.split(ts, "."))
-
-var subject = string.load("gkwp.txt") : "兰·亭" //这里可以写班级或课程名, 或主题班会名
-var strBlack = subject ++ "|"++'\n'++"距高考 " ++ string.repeat(#tsday, " ") ++ "." ++ tsperc ++" 天|"
-var strRed   = "|"++'\n'++"　　　 " ++ tsday ++  string.repeat(#tsperc+1, " ") ++" 　|"
-
-//绘图
-var w, h = win.getScreen()
-var bmp = gdip.bitmap(w, h)
-
-var g = gdip.graphics(bmp)
-//设置绘图质量
-gdip.SetTextRenderingHint(g, 3/*_TextRenderingHintAntiAliasGridFit*/)
-g.smoothingMode = 2/*_SmoothingModeHighQuality*/ ;
-g.interpolationMode = 7/*_InterpolationModeHighQualityBicubic*/ ;
-
-g.clear(0xFFFFFFFF)
-
-var bruBlack = gdip.solidBrush(0xFF000000)
-var bruRed   = gdip.solidBrush(0xEEFF0000)
-
-var strformat = gdip.stringformat()
-strformat.lineAlign = 1/*_StringAlignmentCenter*/ ;
-strformat.align = 2/*_StringAlignmentCenter*/ ;
-var fontfamily = gdip.family("仿宋") : gdip.family("楷体") : gdip.family("宋体") : gdip.family("Arial")
-var font = gdip.font(fontfamily, w/15, 1)
-
-var rct = gdip.RECTF(0,0,w,h)
-
-g.drawString(strBlack, font, rct, strformat, bruBlack)
-g.drawString(strRed, font, rct, strformat, bruRed)
-
-DEBUG = 0
-//调试用，剪贴板出图
-if DEBUG{
-	var hbmp = bmp.copyHandle()
-	win.clip.writeBitmap(hbmp)
+mutex = process.mutex("gkwp")
+if mutex.conflict{
+	console.log("process conflict")
+	return;
 }
 
-//运行
-var wppath = io.fullpath("\GaoKaoWallpaper.BMP")
-bmp.save(wppath)
+console.close()
+color = 0x000000
+function updateWallPaper(){
+	
+	//与明年高考的时间差
+	var t = time((time.now().year+1)++"-6-7 0:0:0").diffsecond(time.now())
+	//格式化
+	var ts = string.format("%0.2f", t/60/60/24)
+	var tsday, tsperc = table.unpack(string.split(ts, "."))
+	
+	var tn = time.now()
+	tn.format = targetName ++ " %H:%M"
+	var tnstr = tostring(tn)
+	
+	//var subject = string.load("gkwp.txt") : "兰·亭" //这里可以写班级或课程名, 或主题班会名
+	var subject = string.load("gkwp.txt") : tnstr
+ 	//这里可以写班级或课程名, 或主题班会名
+	var strBlack = subject ++ "|"++'\n'++"距高考 " ++ string.repeat(#tsday, " ") ++ "." ++ tsperc ++" 天|"
+	var strRed   = "|"++'\n'++"　　　 " ++ tsday ++  string.repeat(#tsperc+1, " ") ++" 　|"
+	
+	//绘图
+	var w, h = win.getScreen()
+	var bmp = gdip.bitmap(w, h)
+	
+	var g = gdip.graphics(bmp)
+	//设置绘图质量
+	gdip.SetTextRenderingHint(g, 3/*_TextRenderingHintAntiAliasGridFit*/)
+	g.smoothingMode = 2/*_SmoothingModeHighQuality*/ ;
+	g.interpolationMode = 7/*_InterpolationModeHighQualityBicubic*/ ;
+	
+	g.clear(0xFF000000 | color)
 
-//设置为壁纸
-//Private Declare Function  Lib "user32" Alias "SystemParametersInfoA" (ByVal uAction As Long, ByVal uParam As Long, ByVal lpvParam As Any, ByVal fuWinIni As Long) As Long
-User32 := raw.loadDll("user32")
-SPI_SETDESKWALLPAPER = 0x0 | 20
-User32.SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, wppath, 0)
+	var bruBlack = gdip.solidBrush(0xFFFFFFFF)
+	var bruRed   = gdip.solidBrush(0xEEFF0000)
+	
+	var strformat = gdip.stringformat()
+	strformat.lineAlign = 1/*_StringAlignmentCenter*/ ;
+	strformat.align = 2/*_StringAlignmentCenter*/ ;
+	var fontfamily = gdip.family("仿宋") : gdip.family("楷体") : gdip.family("宋体") : gdip.family("Arial")
+	var font = gdip.font(fontfamily, w/15, 1)
+	
+	var rct = gdip.RECTF(0,0,w,h)
+	
+	g.drawString(strBlack, font, rct, strformat, bruBlack)
+	g.drawString(strRed, font, rct, strformat, bruRed)
+	
+	DEBUG = 0
+	//调试用，剪贴板出图
+	if DEBUG{
+		var hbmp = bmp.copyHandle()
+		win.clip.writeBitmap(hbmp)
+	}
+	
+	//运行
+	var wppath = io.fullpath("\GaoKaoWallpaper.png")
+	bmp.save(wppath)
+	
+	//设置为壁纸
+	//Private Declare Function  Lib "user32" Alias "SystemParametersInfoA" (ByVal uAction As Long, ByVal uParam As Long, ByVal lpvParam As Any, ByVal fuWinIni As Long) As Long
+	User32 := raw.loadDll("user32")
+	SPI_SETDESKWALLPAPER := 0x0 | 20
+	User32.SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, wppath, 0)
+}
+
+
+updateWallPaper()
+
+
+//在IDE启动只运行一次
+if _STUDIO_INVOKED return; 
+
+//分钟更新
+tmr = win.timer(,59000)
+tmr.onTimer = function(hwnd,msg,id,tick){
+	updateWallPaper()
+}
+tmr.enable()
+
+win.loopMessage()

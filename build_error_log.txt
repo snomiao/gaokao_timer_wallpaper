@@ -1,0 +1,9 @@
+﻿错误发生在文件---------------:
+D:\F\OneDrive_Offline\T\aardio\gkBizhi\main.aardio
+错误信息---------------:
+
+{Error}:
+{Line}:#20
+{File}:D:\F\OneDrive_Offline\T\aardio\gkBizhi\main.aardio
+{Error}:<unexpected symbol>
+{Near}:'.'
