@@ -6,39 +6,45 @@ import win.timer
 import process
 import process.mutex
 
-targetName = "雪星实验室"
-
-mutex = process.mutex("gkwp")
-if mutex.conflict{
-	console.log("process conflict")
-	return;
-}
 
 console.close()
+
 color = 0x000000
 function updateWallPaper(){
 	
 	//与明年高考的时间差
-	var t = time((time.now().year+1)++"-6-7 0:0:0").diffsecond(time.now())
+	var tn = time.now()
+	if!tn return false, "timenow";
+	var tgk = time((tn.year+1)++"-6-7 0:0:0")
+	if!tgk return false, "timegaokao";
+	var t = tgk.diffsecond(tn)
+	if!t return false, "timediff";
+	
 	//格式化
 	var ts = string.format("%0.2f", t/60/60/24)
 	var tsday, tsperc = table.unpack(string.split(ts, "."))
 	
-	var tn = time.now()
+	//这里可以写高考目标啥的
+	var targetName = "雪星实验室"
+	
 	tn.format = targetName ++ " %H:%M"
 	var tnstr = tostring(tn)
 	
-	//var subject = string.load("gkwp.txt") : "兰·亭" //这里可以写班级或课程名, 或主题班会名
+	//这里可以写班级或课程名, 或主题班会名
 	var subject = string.load("gkwp.txt") : tnstr
- 	//这里可以写班级或课程名, 或主题班会名
+ 	
 	var strBlack = subject ++ "|"++'\n'++"距高考 " ++ string.repeat(#tsday, " ") ++ "." ++ tsperc ++" 天|"
 	var strRed   = "|"++'\n'++"　　　 " ++ tsday ++  string.repeat(#tsperc+1, " ") ++" 　|"
 	
 	//绘图
 	var w, h = win.getScreen()
+	if!w return false, "getScreen"; 
 	var bmp = gdip.bitmap(w, h)
+	if!bmp return false, "createbmp"; 
 	
 	var g = gdip.graphics(bmp)
+	if!g return false, "graphics"; 
+	
 	//设置绘图质量
 	gdip.SetTextRenderingHint(g, 3/*_TextRenderingHintAntiAliasGridFit*/)
 	g.smoothingMode = 2/*_SmoothingModeHighQuality*/ ;
@@ -50,11 +56,17 @@ function updateWallPaper(){
 	var bruRed   = gdip.solidBrush(0xEEFF0000)
 	
 	var strformat = gdip.stringformat()
+	if!strformat return false, "strformat";
 	strformat.lineAlign = 1/*_StringAlignmentCenter*/ ;
 	strformat.align = 2/*_StringAlignmentCenter*/ ;
+
 	var fontfamily = gdip.family("仿宋") : gdip.family("楷体") : gdip.family("宋体") : gdip.family("Arial")
-	var font = gdip.font(fontfamily, w/15, 1)
+	if!fontfamily return false, "fontfamily"; 
 	
+	var font = gdip.font(fontfamily, w/15, 1)
+	if!font return false, "font";
+	
+
 	var rct = gdip.RECTF(0,0,w,h)
 	
 	g.drawString(strBlack, font, rct, strformat, bruBlack)
@@ -76,10 +88,20 @@ function updateWallPaper(){
 	User32 := raw.loadDll("user32")
 	SPI_SETDESKWALLPAPER := 0x0 | 20
 	User32.SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, wppath, 0)
+	
+	return true
 }
 
 
 updateWallPaper()
+
+//防多开
+var mutex = process.mutex("gkwp")
+if mutex.conflict{
+	console.log("process conflict")
+	console.pause()
+	return;
+}
 
 
 //在IDE启动只运行一次
