@@ -6,6 +6,16 @@ import win.timer
 import process
 import process.mutex
 
+DEBUG = 0
+
+var debuglog = function(msg){
+	console.log(msg)
+	console.pause()
+	var logpath = io.fullpath("\debug.log")
+	var debugf = io.open(logpath,"a+")
+	debugf.write(msg++'\n')
+	debugf.close()
+}
 
 console.close()
 
@@ -72,7 +82,6 @@ function updateWallPaper(){
 	g.drawString(strBlack, font, rct, strformat, bruBlack)
 	g.drawString(strRed, font, rct, strformat, bruRed)
 	
-	DEBUG = 0
 	//调试用，剪贴板出图
 	if DEBUG{
 		var hbmp = bmp.copyHandle()
@@ -85,32 +94,36 @@ function updateWallPaper(){
 	
 	//设置为壁纸
 	//Private Declare Function  Lib "user32" Alias "SystemParametersInfoA" (ByVal uAction As Long, ByVal uParam As Long, ByVal lpvParam As Any, ByVal fuWinIni As Long) As Long
-	User32 := raw.loadDll("user32")
-	SPI_SETDESKWALLPAPER := 0x0 | 20
+	//var User32 := raw.loadDll("user32")
+	var SPI_SETDESKWALLPAPER = 0x0 | 20
 	User32.SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, wppath, 0)
 	
 	return true
 }
 
 
-updateWallPaper()
+var succ, msg = updateWallPaper()
+if !succ debuglog(msg)
 
 //防多开
-var mutex = process.mutex("gkwp")
-if mutex.conflict{
-	console.log("process conflict")
-	console.pause()
-	return;
+var conflictQ = function(){
+	var mutex = process.mutex("gkwp")
+	return mutex.conflict
 }
 
+if conflictQ(){
+	debuglog("process conflict")
+	return;
+}
 
 //在IDE启动只运行一次
 if _STUDIO_INVOKED return; 
 
 //分钟更新
-tmr = win.timer(,59000)
+var tmr = win.timer(,59000)
 tmr.onTimer = function(hwnd,msg,id,tick){
-	updateWallPaper()
+	var succ, msg = updateWallPaper()
+	if !succ debuglog(msg)
 }
 tmr.enable()
 

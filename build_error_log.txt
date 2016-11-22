@@ -1,9 +1,10 @@
 ﻿错误发生在文件---------------:
-D:\F\OneDrive_Offline\T\aardio\gkBizhi\main.aardio
+C:\Users\99759\Documents\GitHub\gaokao_timer_wallpaper\main.aardio
 错误信息---------------:
 
 {Error}:
-{Line}:#20
-{File}:D:\F\OneDrive_Offline\T\aardio\gkBizhi\main.aardio
-{Error}:<unexpected symbol>
-{Near}:'.'
+{Line}:#94
+{File}:C:\Users\99759\Documents\GitHub\gaokao_timer_wallpaper\main.aardio
+{Error}:
+{Expected}:'<name>'
+{Near}:'User32<constant>'
